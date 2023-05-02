@@ -24,8 +24,8 @@ class NotaRepository(
     fun buscaPorId(id: String) = dao.buscaPorId(id)
 
     suspend fun remove(id: String) {
-        dao.remove(id)
-        client.remove(id)
+        dao.desativa(id)
+        if (client.remove(id)) dao.remove(id)
     }
 
     suspend fun salva(nota: Nota) {
@@ -37,6 +37,10 @@ class NotaRepository(
     }
 
     suspend fun sincroniza() {
+        val notasDesativadas = dao.buscaNotasDesativadas().first()
+        notasDesativadas.forEach { notaDesativada ->
+            remove(notaDesativada.id)
+        }
         val notasNaoSincronizadas = dao.buscaNaoSincronizadas().first()
         notasNaoSincronizadas.forEach { notas ->
             salva(notas)
